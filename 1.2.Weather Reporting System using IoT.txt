@@ -1,0 +1,119 @@
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <chrono>
+#include <cstdlib>
+
+// Simulated sensor readings
+class WeatherSensor {
+public:
+    virtual double getReading() = 0;
+};
+
+class TemperatureSensor : public WeatherSensor {
+public:
+    double getReading() override {
+        // Simulate temperature sensor reading
+        return 20 + (rand() % 15);  // Simulating values between 20 and 35 degrees Celsius
+    }
+};
+
+class HumiditySensor : public WeatherSensor {
+public:
+    double getReading() override {
+        // Simulate humidity sensor reading
+        return 40 + (rand() % 30);  // Simulating values between 40% and 70%
+    }
+};
+
+class RainSensor : public WeatherSensor {
+public:
+    double getReading() override {
+        // Simulate rain sensor reading
+        return rand() % 101;  // Simulating values between 0% and 100%
+    }
+};
+
+// Internet communication module
+class InternetCommunication {
+public:
+    void sendReport(const std::string& report) {
+        // Simulate sending a report over the Internet
+        std::cout << "Report sent over the Internet: " << report << std::endl;
+        // Add code here to send an actual HTTP request
+    }
+};
+
+// Weather Reporting System
+class WeatherReportingSystem {
+private:
+    std::vector<WeatherSensor*> sensors;
+    InternetCommunication internet;
+    double temperatureThreshold;
+    double humidityThreshold;
+    double rainThreshold;
+
+public:
+    WeatherReportingSystem(double tempThreshold, double humThreshold, double rainThreshold)
+        : temperatureThreshold(tempThreshold), humidityThreshold(humThreshold), rainThreshold(rainThreshold) {
+        // Initialize sensors
+        sensors.push_back(new TemperatureSensor());
+        sensors.push_back(new HumiditySensor());
+        sensors.push_back(new RainSensor());
+    }
+
+    ~WeatherReportingSystem() {
+        // Clean up sensors
+        for (auto sensor : sensors) {
+            delete sensor;
+        }
+    }
+
+    void generateWeatherReport() {
+        double temperature = sensors[0]->getReading();
+        double humidity = sensors[1]->getReading();
+        double rain = sensors[2]->getReading();
+
+        std::string report = "Temperature: " + std::to_string(temperature) + "°C, "
+                             "Humidity: " + std::to_string(humidity) + "%, "
+                             "Rain: " + std::to_string(rain) + "%";
+
+        sendReportOnline(report);
+
+        checkAlerts(temperature, humidity, rain);
+    }
+
+    void sendReportOnline(const std::string& report) {
+        internet.sendReport(report);
+    }
+
+    void checkAlerts(double temperature, double humidity, double rain) {
+        if (temperature > temperatureThreshold) {
+            std::cout << "Temperature Alert: Red" << std::endl;
+            // Add code here to handle extreme temperature events
+        } else if (humidity > humidityThreshold) {
+            std::cout << "Humidity Alert: Red" << std::endl;
+            // Add code here to handle high humidity events
+        } else if (rain > rainThreshold) {
+            std::cout << "Rain Alert: Red" << std::endl;
+            // Add code here to handle heavy rainfall events
+        } else {
+            std::cout << "Weather conditions normal" << std::endl;
+        }
+    }
+};
+
+int main() {
+    srand(time(0));  // Seed for random values
+
+    WeatherReportingSystem weatherSystem(30.0, 60.0, 70.0);  // Set thresholds for temperature, humidity, and rain
+
+    for (int i = 0; i < 5; ++i) {
+        weatherSystem.generateWeatherReport();
+        std::cout << "---------------------" << std::endl;
+        // Simulate some delay between iterations
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+
+    return 0;
+}
